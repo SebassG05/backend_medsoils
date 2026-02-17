@@ -51,12 +51,19 @@ export default (app) => {
   
   // Error handler
   app.use((err, req, res, next) => {
-    console.error(err.stack);
+    // Solo loggear errores internos, no errores operacionales esperados
+    if (!err.isOperational) {
+      console.error('❌ Error no esperado:', err);
+    }
     
-    res.status(err.status || 500).json({
+    const statusCode = err.statusCode || err.status || 500;
+    const message = err.message || 'Internal Server Error';
+    
+    res.status(statusCode).json({
       success: false,
-      message: err.message || 'Internal Server Error',
-      ...(config.env === 'development' && { stack: err.stack }),
+      message,
+      // Solo mostrar stack en desarrollo Y si no es error operacional
+      ...(config.env === 'development' && !err.isOperational && { stack: err.stack }),
     });
   });
   

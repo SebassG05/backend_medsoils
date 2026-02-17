@@ -11,23 +11,19 @@ class AuthService {
   async register(userData) {
     const { name, email, password } = userData;
 
-    // Verificar si el usuario ya existe
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       throw new AppError('El email ya está registrado', 400);
     }
 
-    // Crear nuevo usuario
     const user = new User({
       name,
       email,
       password,
     });
 
-    // Guardar usuario (el password se hasheará automáticamente por el middleware)
     await user.save();
 
-    // Generar token JWT
     const token = this.generateToken(user._id);
 
     return {
@@ -38,12 +34,12 @@ class AuthService {
 
   /**
    * Inicia sesión de un usuario
-   * @param {string} email - Email del usuario
-   * @param {string} password - Contraseña del usuario
-   * @returns {Object} Usuario y token JWT
+   * @param {string} email
+   * @param {string} password 
+   * @returns {Object} 
    */
   async login(email, password) {
-    // Buscar usuario por email e incluir el password
+
     const user = await User.findOne({ email }).select('+password');
     
     if (!user) {

@@ -16,7 +16,8 @@ const config = {
   // JWT
   jwt: {
     secret: process.env.JWT_SECRET || 'default_secret_change_this',
-    expire: process.env.JWT_EXPIRE || '7d',
+    refreshSecret: process.env.JWT_REFRESH_SECRET || 'default_refresh_secret_change_this',
+    expiry: process.env.JWT_EXPIRE || '1h',
   },
   
   // Email
@@ -31,6 +32,7 @@ const config = {
   google: {
     clientId: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    redirectUrl: process.env.GOOGLE_REDIRECT_URL || 'http://localhost:3000/auth/callback',
   },
   
   // CORS

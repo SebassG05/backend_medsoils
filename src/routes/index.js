@@ -1,4 +1,5 @@
 import express from 'express';
+import authRoutes from './authRoutes.js';
 
 const router = express.Router();
 
@@ -11,8 +12,12 @@ router.get('/', (req, res) => {
     endpoints: {
       health: '/health',
       api: '/api/v1',
+      auth: '/api/v1/auth',
     },
   });
 });
+
+// Auth routes
+router.use('/auth', authRoutes);
 
 export default router;

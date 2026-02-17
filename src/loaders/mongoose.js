@@ -5,7 +5,7 @@ export default async () => {
   try {
     const connection = await mongoose.connect(config.mongodb.uri);
     
-    console.log(`✅ MongoDB connected: ${connection.connection.host}`);
+    console.log(`✅ Conexión exitosa a MongoDB - Base de datos: ${connection.connection.name}`);
     
     // Handle connection events
     mongoose.connection.on('error', (err) => {

@@ -40,6 +40,7 @@ const config = {
     origin: [
       'http://localhost:3000',
       'http://localhost:3017',
+      'http://localhost:3018',
       process.env.CORS_ORIGIN
     ].filter(Boolean),
   },

@@ -49,6 +49,16 @@ const userSchema = new mongoose.Schema({
     },
   }],
   
+  // Password Reset
+  passwordResetToken: {
+    type: String,
+    default: null,
+  },
+  passwordResetExpires: {
+    type: Date,
+    default: null,
+  },
+
   // Account verification
   isVerified: {
     type: Boolean,

@@ -84,6 +84,27 @@ class AuthController {
       next(error);
     }
   }
+
+  /**
+   * Login / register con Google OAuth
+   * POST /api/auth/google/login
+   */
+  async googleLogin(req, res, next) {
+    try {
+      const { token } = req.body;
+      if (!token) {
+        return res.status(400).json({ success: false, message: 'Google token is required' });
+      }
+      const result = await authService.googleLogin(token);
+      res.status(200).json({
+        success: true,
+        message: 'Google login successful',
+        data: result,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new AuthController();

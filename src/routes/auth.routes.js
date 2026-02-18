@@ -34,4 +34,11 @@ router.get('/profile', authenticate, authController.getProfile);
  */
 router.post('/logout', authenticate, authController.logout);
 
+/**
+ * @route   POST /api/auth/google/login
+ * @desc    Login o registro con Google OAuth
+ * @access  Public
+ */
+router.post('/google/login', authController.googleLogin);
+
 export default router;

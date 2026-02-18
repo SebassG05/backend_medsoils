@@ -11,6 +11,8 @@ class AuthService {
   async register(userData) {
     const { name, email, password } = userData;
 
+    console.log('📝 Registrando usuario:', { name, email });
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       throw new AppError('El email ya está registrado', 400);
@@ -22,7 +24,9 @@ class AuthService {
       password,
     });
 
+    console.log('💾 Guardando usuario en MongoDB...');
     await user.save();
+    console.log('✅ Usuario guardado exitosamente:', user._id);
 
     const token = this.generateToken(user._id);
 

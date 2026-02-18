@@ -1,6 +1,9 @@
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
+import { OAuth2Client } from 'google-auth-library';
 import { AppError } from '../utils/errors.js';
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 class AuthService {
   /**
@@ -66,7 +69,8 @@ class AuthService {
 
     return {
       user: user.toPublicJSON(),
-      token,
+      accessToken: token,
+      refreshToken: token,
     };
   }
 
@@ -97,10 +101,47 @@ class AuthService {
   }
 
   /**
-   * Obtiene un usuario por ID
-   * @param {string} userId - ID del usuario
-   * @returns {Object} Usuario
+   * Login / register con Google OAuth
+   * @param {string} idToken - Google ID token del frontend
+   * @returns {Object} { user, accessToken, refreshToken }
    */
+  async googleLogin(idToken) {
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { sub: googleId, email, name, picture } = payload;
+
+    let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+    if (user) {
+      user.googleId = googleId;
+      user.googleName = name;
+      user.googlePicture = picture;
+      if (!user.name) user.name = name;
+      await user.save();
+    } else {
+      user = new User({
+        name,
+        email,
+        googleId,
+        googleName: name,
+        googlePicture: picture,
+        isVerified: true,
+        isActive: true,
+      });
+      await user.save();
+    }
+
+    const token = this.generateToken(user._id);
+    return {
+      user: user.toPublicJSON(),
+      accessToken: token,
+      refreshToken: token,
+    };
+  }
+
   async getUserById(userId) {
     const user = await User.findById(userId);
     

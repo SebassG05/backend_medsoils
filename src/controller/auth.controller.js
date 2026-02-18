@@ -105,6 +105,47 @@ class AuthController {
       next(error);
     }
   }
+
+  /**
+   * Sends a password reset email
+   * POST /api/auth/forgot-password
+   */
+  async forgotPassword(req, res, next) {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ success: false, message: 'Email is required' });
+      }
+      await authService.forgotPassword(email);
+      // Always respond with 200 to avoid email enumeration
+      res.status(200).json({
+        success: true,
+        message: 'If that email is registered, a reset link has been sent.',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Resets the user password using the token from the email
+   * POST /api/auth/reset-password
+   */
+  async resetPassword(req, res, next) {
+    try {
+      const { token, newPassword } = req.body;
+      if (!token || !newPassword) {
+        return res.status(400).json({ success: false, message: 'Token and new password are required' });
+      }
+      await authService.resetPassword(token, newPassword);
+      res.status(200).json({
+        success: true,
+        message: 'Password updated successfully. You can now log in.',
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new AuthController();

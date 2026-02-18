@@ -41,4 +41,18 @@ router.post('/logout', authenticate, authController.logout);
  */
 router.post('/google/login', authController.googleLogin);
 
+/**
+ * @route   POST /api/auth/forgot-password
+ * @desc    Sends password reset email
+ * @access  Public
+ */
+router.post('/forgot-password', authController.forgotPassword);
+
+/**
+ * @route   POST /api/auth/reset-password
+ * @desc    Resets password using token from email
+ * @access  Public
+ */
+router.post('/reset-password', authController.resetPassword);
+
 export default router;

@@ -1,7 +1,9 @@
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import { OAuth2Client } from 'google-auth-library';
 import { AppError } from '../utils/errors.js';
+import { sendPasswordResetEmail } from '../utils/emailService.js';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -152,6 +154,51 @@ class AuthService {
     if (!user.isActive) {
       throw new AppError('Usuario inactivo', 401);
     }
+
+    return user.toPublicJSON();
+  }
+
+  /**
+   * Generates a reset token, saves it to the user and sends the email.
+   * @param {string} email
+   */
+  async forgotPassword(email) {
+    const user = await User.findOne({ email });
+    // Always respond OK to avoid email enumeration
+    if (!user) return;
+
+    // Generate a secure random token
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    user.passwordResetToken = hashedToken;
+    user.passwordResetExpires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await user.save({ validateBeforeSave: false });
+
+    await sendPasswordResetEmail(user.email, rawToken, user.name);
+  }
+
+  /**
+   * Validates the reset token and updates the user's password.
+   * @param {string} rawToken - Raw token from the URL
+   * @param {string} newPassword
+   */
+  async resetPassword(rawToken, newPassword) {
+    const hashedToken = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    const user = await User.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: Date.now() },
+    });
+
+    if (!user) {
+      throw new AppError('Invalid or expired reset token', 400);
+    }
+
+    user.password = newPassword;
+    user.passwordResetToken = null;
+    user.passwordResetExpires = null;
+    await user.save();
 
     return user.toPublicJSON();
   }

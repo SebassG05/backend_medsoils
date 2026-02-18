@@ -21,10 +21,8 @@ export const registerValidation = [
   body('password')
     .notEmpty()
     .withMessage('La contraseña es obligatoria')
-    .isLength({ min: 8 })
-    .withMessage('La contraseña debe tener al menos 8 caracteres')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#_\-.,;:])/)
-    .withMessage('La contraseña debe contener al menos una mayúscula, una minúscula, un número y un símbolo especial (@$!%*?&#_-.,;:)'),
+    .isLength({ min: 6 })
+    .withMessage('La contraseña debe tener al menos 6 caracteres'),
 
   body('confirmPassword')
     .notEmpty()

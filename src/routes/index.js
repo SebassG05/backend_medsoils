@@ -1,6 +1,7 @@
 import express from 'express';
 import authRoutes from './auth.routes.js';
 import contactRoutes from './contact.routes.js';
+import quizRoutes from './quiz.routes.js';
 
 const router = express.Router();
 
@@ -27,5 +28,8 @@ router.use('/auth', authRoutes);
 
 // Contact routes
 router.use('/contact', contactRoutes);
+
+// Quiz routes
+router.use('/quiz', quizRoutes);
 
 export default router;

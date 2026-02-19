@@ -1,5 +1,6 @@
 import express from 'express';
 import authRoutes from './auth.routes.js';
+import contactRoutes from './contact.routes.js';
 
 const router = express.Router();
 
@@ -23,5 +24,8 @@ router.get('/', (req, res) => {
 
 // Auth routes
 router.use('/auth', authRoutes);
+
+// Contact routes
+router.use('/contact', contactRoutes);
 
 export default router;

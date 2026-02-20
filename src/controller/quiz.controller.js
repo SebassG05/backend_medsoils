@@ -7,10 +7,10 @@ class QuizController {
    */
   async saveResult(req, res, next) {
     try {
-      const { score, totalTime } = req.body;
+      const { score, totalTime, alias } = req.body;
       const userId = req.user.userId;
 
-      const data = await quizService.saveResult({ userId, score, totalTime });
+      const data = await quizService.saveResult({ userId, score, totalTime, alias });
 
       res.status(200).json({
         success: true,
@@ -34,6 +34,37 @@ class QuizController {
       res.status(200).json({
         success: true,
         data: entries,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+  /**
+   * GET /api/v1/quiz/result/me
+   * Authenticated — returns the caller's own result, or null.
+   */
+  async getMyResult(req, res, next) {
+    try {
+      const userId = req.user.userId;
+      const data = await quizService.getMyResult(userId);
+      res.status(200).json({ success: true, data });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * DELETE /api/v1/quiz/result
+   * Authenticated — removes the caller's result from the leaderboard.
+   */
+  async deleteResult(req, res, next) {
+    try {
+      const userId = req.user.userId;
+      const data = await quizService.deleteResult(userId);
+      res.status(200).json({
+        success: true,
+        message: data.deleted ? 'Your record has been deleted.' : 'No record found.',
+        data,
       });
     } catch (error) {
       next(error);

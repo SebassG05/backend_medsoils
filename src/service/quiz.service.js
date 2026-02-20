@@ -14,16 +14,22 @@ class QuizService {
    *
    * @returns {{ rank: number, saved: boolean, result: object }}
    */
-  async saveResult({ userId, score, totalTime }) {
+  async saveResult({ userId, score, totalTime, alias }) {
     if (score === undefined || totalTime === undefined) {
       throw new AppError('score and totalTime are required', 400);
     }
 
     const roundedTime = Math.round(totalTime * 10) / 10;
 
-    // Resolve display name from the User document
-    const user = await User.findById(userId).select('name').lean();
-    const name = user?.name ?? 'Anonymous';
+    // Use alias if it is exactly 3 alphanumeric characters, otherwise fall back to real name
+    const isValidAlias = alias && /^[A-Za-z0-9]{3}$/.test(alias.trim());
+    let name;
+    if (isValidAlias) {
+      name = alias.trim().toUpperCase();
+    } else {
+      const user = await User.findById(userId).select('name').lean();
+      name = user?.name ?? 'Anonymous';
+    }
 
     const existing = await QuizResult.findOne({ userId });
 
@@ -40,11 +46,16 @@ class QuizService {
       if (isBetter) {
         existing.score      = score;
         existing.totalTime  = roundedTime;
-        existing.name       = name;          // keep display name in sync
         existing.achievedAt = new Date();
-        await existing.save();
         saved = true;
       }
+
+      // Always update the display name (alias or real name) regardless of score
+      if (existing.name !== name) {
+        existing.name = name;
+      }
+
+      await existing.save();
     }
 
     // Compute rank in global leaderboard
@@ -63,6 +74,23 @@ class QuizService {
       .limit(limit)
       .select('name score totalTime achievedAt')
       .lean();
+  }
+
+  /**
+   * Delete the authenticated user's quiz result.
+   * @returns {{ deleted: boolean }}
+   */
+  async deleteResult(userId) {
+    const result = await QuizResult.findOneAndDelete({ userId });
+    return { deleted: !!result };
+  }
+
+  /**
+   * Return the authenticated user's own result, or null if none.
+   */
+  async getMyResult(userId) {
+    const result = await QuizResult.findOne({ userId }).lean();
+    return result ?? null;
   }
 
   // ── Private ──────────────────────────────────────────────────────────────

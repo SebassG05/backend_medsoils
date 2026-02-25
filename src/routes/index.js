@@ -3,6 +3,7 @@ import authRoutes from './auth.routes.js';
 import contactRoutes from './contact.routes.js';
 import quizRoutes from './quiz.routes.js';
 import blogRoutes from './blog.routes.js';
+import resourceRoutes from './resource.routes.js';
 
 const router = express.Router();
 
@@ -35,5 +36,8 @@ router.use('/quiz', quizRoutes);
 
 // Blog routes
 router.use('/blogs', blogRoutes);
+
+// Resource routes
+router.use('/resources', resourceRoutes);
 
 export default router;

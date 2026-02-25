@@ -33,7 +33,7 @@ class AuthService {
     await user.save();
     console.log('✅ Usuario guardado exitosamente:', user._id);
 
-    const token = this.generateToken(user._id);
+    const token = this.generateToken(user._id, user.role);
 
     return {
       user: user.toPublicJSON(),
@@ -67,7 +67,7 @@ class AuthService {
     }
 
     // Generar token JWT
-    const token = this.generateToken(user._id);
+    const token = this.generateToken(user._id, user.role);
 
     return {
       user: user.toPublicJSON(),
@@ -81,11 +81,11 @@ class AuthService {
    * @param {string} userId - ID del usuario
    * @returns {string} Token JWT
    */
-  generateToken(userId) {
+  generateToken(userId, role = 'user') {
     const secret = process.env.JWT_SECRET || 'your-secret-key-change-this';
     const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
 
-    return jwt.sign({ userId }, secret, { expiresIn });
+    return jwt.sign({ userId, role }, secret, { expiresIn });
   }
 
   /**
@@ -136,7 +136,7 @@ class AuthService {
       await user.save();
     }
 
-    const token = this.generateToken(user._id);
+    const token = this.generateToken(user._id, user.role);
     return {
       user: user.toPublicJSON(),
       accessToken: token,

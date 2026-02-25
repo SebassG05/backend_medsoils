@@ -10,13 +10,13 @@ import {
 
 const router = express.Router();
 
-// All blog routes require authentication
-router.use(authenticate);
-
+// Public: read
 router.get('/',    getAllBlogs);
 router.get('/:id', getBlogById);
-router.post('/',   createBlog);
-router.put('/:id', updateBlog);
-router.delete('/:id', deleteBlog);
+
+// Protected: write
+router.post(  '/',    authenticate, createBlog);
+router.put(   '/:id', authenticate, updateBlog);
+router.delete('/:id', authenticate, deleteBlog);
 
 export default router;

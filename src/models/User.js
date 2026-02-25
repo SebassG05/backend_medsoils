@@ -67,6 +67,13 @@ const userSchema = new mongoose.Schema({
   verificationCode: String,
   verificationCodeExpires: Date,
   
+  // Role
+  role: {
+    type: String,
+    enum: ['user', 'admin', 'superadmin'],
+    default: 'user',
+  },
+
   // Account status
   isActive: {
     type: Boolean,
@@ -124,6 +131,7 @@ userSchema.methods.toPublicJSON = function() {
     twoFactorEnabled: this.twoFactorEnabled,
     isVerified: this.isVerified,
     isActive: this.isActive,
+    role: this.role,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,
   };

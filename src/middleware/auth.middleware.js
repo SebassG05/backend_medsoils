@@ -45,3 +45,20 @@ export const authorize = (...roles) => {
     next();
   };
 };
+
+// Optional authentication - sets req.user if token is valid, but doesn't fail if no token
+export const optionalAuth = async (req, res, next) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    
+    if (token) {
+      const decoded = jwt.verify(token, config.jwt.secret);
+      req.user = decoded;
+    }
+    
+    next();
+  } catch (error) {
+    // Invalid token, but continue without user
+    next();
+  }
+};

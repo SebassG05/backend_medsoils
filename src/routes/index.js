@@ -4,6 +4,7 @@ import contactRoutes from './contact.routes.js';
 import quizRoutes from './quiz.routes.js';
 import blogRoutes from './blog.routes.js';
 import resourceRoutes from './resource.routes.js';
+import reviewRoutes from './review.routes.js';
 
 const router = express.Router();
 
@@ -39,5 +40,8 @@ router.use('/blogs', blogRoutes);
 
 // Resource routes
 router.use('/resources', resourceRoutes);
+
+// Review routes
+router.use('/reviews', reviewRoutes);
 
 export default router;

@@ -146,6 +146,27 @@ class AuthController {
       next(error);
     }
   }
+
+  /**
+   * Forced password change for authenticated users who must reset their password
+   * POST /api/auth/force-change-password
+   */
+  async forceChangePassword(req, res, next) {
+    try {
+      const { newPassword } = req.body;
+      if (!newPassword) {
+        return res.status(400).json({ success: false, message: 'newPassword is required' });
+      }
+      const user = await authService.forceChangePassword(req.user.userId, newPassword);
+      res.status(200).json({
+        success: true,
+        message: 'Password changed successfully.',
+        data: { user },
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default new AuthController();

@@ -74,6 +74,13 @@ const userSchema = new mongoose.Schema({
     default: 'user',
   },
 
+  // Force password reset on next login
+  // null = not yet evaluated, true = must reset, false = already completed reset
+  mustResetPassword: {
+    type: Boolean,
+    default: null,
+  },
+
   // Account status
   isActive: {
     type: Boolean,
@@ -131,6 +138,7 @@ userSchema.methods.toPublicJSON = function() {
     twoFactorEnabled: this.twoFactorEnabled,
     isVerified: this.isVerified,
     isActive: this.isActive,
+    mustResetPassword: this.mustResetPassword,
     role: this.role,
     createdAt: this.createdAt,
     updatedAt: this.updatedAt,

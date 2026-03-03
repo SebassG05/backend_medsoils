@@ -5,6 +5,14 @@ import { OAuth2Client } from 'google-auth-library';
 import { AppError } from '../utils/errors.js';
 import { sendPasswordResetEmail } from '../utils/emailService.js';
 
+// Emails that must reset their password on the next login
+const FORCED_RESET_EMAILS = [
+  'penhaloza@gmail.com',
+  'simone.priori@unitus.it',
+  'ac.lorenzelli@timesis.it',
+  'prueba@example.com',
+];
+
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 class AuthService {
@@ -15,8 +23,6 @@ class AuthService {
    */
   async register(userData) {
     const { name, email, password } = userData;
-
-    console.log('📝 Registrando usuario:', { name, email });
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -29,9 +35,7 @@ class AuthService {
       password,
     });
 
-    console.log('💾 Guardando usuario en MongoDB...');
     await user.save();
-    console.log('✅ Usuario guardado exitosamente:', user._id);
 
     const token = this.generateToken(user._id, user.role);
 
@@ -66,6 +70,13 @@ class AuthService {
       throw new AppError('Credenciales incorrectas', 401);
     }
 
+    // Mark forced-reset users: triggers if flag is not explicitly false
+    // (handles new docs with null default and old docs with undefined)
+    if (FORCED_RESET_EMAILS.includes(user.email) && user.mustResetPassword !== false) {
+      user.mustResetPassword = true;
+      await user.save({ validateBeforeSave: false });
+    }
+
     // Generar token JWT
     const token = this.generateToken(user._id, user.role);
 
@@ -74,6 +85,23 @@ class AuthService {
       accessToken: token,
       refreshToken: token,
     };
+  }
+
+  /**
+   * Forces a password change for an already-authenticated user.
+   * Clears the mustResetPassword flag on success.
+   * @param {string} userId
+   * @param {string} newPassword
+   */
+  async forceChangePassword(userId, newPassword) {
+    const user = await User.findById(userId);
+    if (!user) throw new AppError('User not found', 404);
+
+    user.password = newPassword;
+    user.mustResetPassword = false;
+    await user.save();
+
+    return user.toPublicJSON();
   }
 
   /**

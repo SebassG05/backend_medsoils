@@ -55,4 +55,11 @@ router.post('/forgot-password', authController.forgotPassword);
  */
 router.post('/reset-password', authController.resetPassword);
 
+/**
+ * @route   POST /api/auth/force-change-password
+ * @desc    Forced password change for authenticated users (mustResetPassword flag)
+ * @access  Private
+ */
+router.post('/force-change-password', authenticate, authController.forceChangePassword);
+
 export default router;

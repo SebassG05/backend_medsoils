@@ -42,7 +42,7 @@ const config = {
       'http://localhost:5173',
       'http://localhost:3017',
       'http://localhost:3018',
-   
+      process.env.FRONTEND_URL,
       process.env.CORS_ORIGIN
     ].filter(Boolean),
   },

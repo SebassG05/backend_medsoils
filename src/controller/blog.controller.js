@@ -139,3 +139,30 @@ export const deleteBlog = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// GET /api/v1/blogs/stats  — public statistics
+export const getBlogStats = async (req, res) => {
+  try {
+    // Count published articles
+    const totalArticles = await Blog.countDocuments({ published: true });
+
+    // Count unique authors
+    const uniqueAuthors = await Blog.distinct('author', { published: true });
+    const totalAuthors = uniqueAuthors.length;
+
+    // Count unique topics/tags
+    const uniqueTags = await Blog.distinct('tags', { published: true });
+    const totalTopics = uniqueTags.length;
+
+    res.json({
+      success: true,
+      data: {
+        totalArticles,
+        totalAuthors,
+        totalTopics
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};

@@ -6,11 +6,13 @@ import {
   createBlog,
   updateBlog,
   deleteBlog,
+  getBlogStats,
 } from '../controller/blog.controller.js';
 
 const router = express.Router();
 
 // Public: read
+router.get('/stats', getBlogStats);
 router.get('/',    getAllBlogs);
 router.get('/:id', getBlogById);
 

@@ -10,13 +10,34 @@ export const getAllBlogs = async (req, res) => {
     const page  = Math.max(1, parseInt(req.query.page)  || 1);
     const limit = Math.min(50, parseInt(req.query.limit) || 10);
     const skip  = (page - 1) * limit;
+    const allowedTypes = ['post', 'event'];
+    const type = allowedTypes.includes(req.query.type) ? req.query.type : 'post';
+    const query = type === 'event'
+      ? {
+          published: true,
+          $or: [
+            { type: 'event' },
+            { type: { $exists: false }, eventDate: { $exists: true, $ne: null } },
+            { type: null, eventDate: { $exists: true, $ne: null } },
+            { type: '', eventDate: { $exists: true, $ne: null } },
+          ],
+        }
+      : {
+          published: true,
+          $or: [
+            { type: 'post' },
+            { type: { $exists: false }, eventDate: null },
+            { type: null, eventDate: null },
+            { type: '', eventDate: null },
+          ],
+        };
 
     const [posts, total] = await Promise.all([
-      Blog.find({ published: true })
+      Blog.find(query)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),                 // include content so we can extract cover image
-      Blog.countDocuments({ published: true }),
+      Blog.countDocuments(query),
     ]);
 
     // Build clean list objects: plain-text excerpt + resolved cover image, no full content
@@ -58,10 +79,21 @@ export const getBlogById = async (req, res) => {
 // POST /api/v1/blogs  — create (auth required)
 export const createBlog = async (req, res) => {
   try {
-    const { title, content, tags, coverImage, bannerImage } = req.body;
+    const { title, content, tags, coverImage, bannerImage, type, eventDate, eventTime } = req.body;
 
     if (!title?.trim() || !content?.trim()) {
       return res.status(400).json({ success: false, message: 'Title and content are required' });
+    }
+
+    const postType = ['post', 'event'].includes(type) ? type : 'post';
+
+    if (postType === 'event') {
+      if (!eventDate || !eventTime?.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: 'Event date and approximate time are required',
+        });
+      }
     }
 
     // Auto-generate excerpt and extract cover image
@@ -72,11 +104,18 @@ export const createBlog = async (req, res) => {
     const user = await User.findById(req.user.userId);
     if (!user) return res.status(401).json({ success: false, message: 'User not found' });
 
+    if (postType === 'event' && user.role !== 'superadmin') {
+      return res.status(403).json({ success: false, message: 'Only SuperAdmin can create events' });
+    }
+
     const post = await Blog.create({
       title:       title.trim(),
       content:     content.trim(),
       excerpt,
       tags:        Array.isArray(tags) ? tags : [],
+      type:        postType,
+      eventDate:   postType === 'event' ? new Date(eventDate) : null,
+      eventTime:   postType === 'event' ? eventTime.trim() : '',
       coverImage:  autoCover,
       bannerImage: bannerImage || '',
       author:      req.user.userId,
@@ -99,7 +138,7 @@ export const updateBlog = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Not authorized' });
     }
 
-    const { title, content, tags, coverImage, bannerImage, published } = req.body;
+    const { title, content, tags, coverImage, bannerImage, published, type, eventDate, eventTime } = req.body;
 
     if (title       !== undefined) post.title       = title.trim();
     if (content     !== undefined) {
@@ -113,6 +152,28 @@ export const updateBlog = async (req, res) => {
     if (bannerImage !== undefined) {
       post.bannerImage = bannerImage;
       if (bannerImage) post.coverImage = bannerImage; // banner wins as card cover too
+    }
+    if (type !== undefined) {
+      if (!['post', 'event'].includes(type)) {
+        return res.status(400).json({ success: false, message: 'Invalid blog type' });
+      }
+      if (type === 'event' && req.user.role !== 'superadmin') {
+        return res.status(403).json({ success: false, message: 'Only SuperAdmin can set event type' });
+      }
+      post.type = type;
+    }
+    if (eventDate !== undefined) {
+      post.eventDate = eventDate ? new Date(eventDate) : null;
+    }
+    if (eventTime !== undefined) {
+      post.eventTime = eventTime?.trim() || '';
+    }
+    if (post.type === 'event' && (!post.eventDate || !post.eventTime)) {
+      return res.status(400).json({ success: false, message: 'Event date and approximate time are required' });
+    }
+    if (post.type === 'post') {
+      post.eventDate = null;
+      post.eventTime = '';
     }
     if (published   !== undefined) post.published   = published;
 

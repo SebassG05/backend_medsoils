@@ -21,6 +21,22 @@ const blogSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    type: {
+      type: String,
+      enum: ['post', 'event'],
+      default: 'post',
+      index: true,
+    },
+    eventDate: {
+      type: Date,
+      default: null,
+    },
+    eventTime: {
+      type: String,
+      trim: true,
+      maxlength: 80,
+      default: '',
+    },
     author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -53,5 +69,6 @@ const blogSchema = new mongoose.Schema(
 
 blogSchema.index({ createdAt: -1 });
 blogSchema.index({ author: 1, createdAt: -1 });
+blogSchema.index({ type: 1, createdAt: -1 });
 
 export default mongoose.model('Blog', blogSchema);

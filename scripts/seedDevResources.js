@@ -57,13 +57,43 @@ const Resource = mongoose.models.Resource || mongoose.model('Resource', new mong
   { timestamps: true }
 ))
 
+/*
+ * Real content from the Adıyaman field trip (Day 1, 2 Nov 2026), hosted on
+ * Cloudinary. Images are delivered resized (f_auto,q_auto,w_960); videos as
+ * H.264 ≤ 1280 px, the same transformation the frontend gallery uses.
+ */
+const CLD = 'https://res.cloudinary.com/dktr2wcto'
+const VIDEO_T = 'vc_h264,q_auto,w_1280,h_1280,c_limit'
+const POSTER_T = 'so_1,f_auto,q_auto,w_960,c_limit'
+
 const SAMPLES = [
-  { title: 'Introduction to soil health', type: 'video', tag: 'Basics', duration: '12 min',
-    url: 'https://example.com/dev/soil-health', description: 'Sample video for local development.' },
-  { title: 'Mediterranean soils field guide', type: 'pdf', tag: 'Guide', pages: '24 pages',
-    url: 'https://example.com/dev/field-guide.pdf', description: 'Sample PDF for local development.' },
-  { title: 'Sampling campaign photos', type: 'image', tag: 'Fieldwork', count: '18 photos',
-    url: 'https://example.com/dev/gallery', description: 'Sample image gallery for local development.' },
+  {
+    title: 'Adıyaman field day: soil pit photos',
+    type: 'image',
+    tag: 'Fieldwork',
+    count: '21 photos',
+    url: '/resources/adiyaman/dia-1?show=photos',
+    thumbnail: `${CLD}/image/upload/f_auto,q_auto,w_960,c_limit/v1794232530/PXL_20261102_073842703_akyoz3.jpg`,
+    description: 'Day 1 of the visit to Adıyaman: opening a soil pit, describing its horizons and working through the results.',
+  },
+  {
+    title: 'Opening the soil pit',
+    type: 'video',
+    tag: 'Fieldwork',
+    duration: '0:16',
+    url: `${CLD}/video/upload/${VIDEO_T}/v1794232549/PXL_20261102_073844611_httifl.mp4`,
+    thumbnail: `${CLD}/video/upload/${POSTER_T}/v1794232549/PXL_20261102_073844611_httifl.jpg`,
+    description: 'A backhoe digs the soil pit while the group looks on, Adıyaman, Day 1.',
+  },
+  {
+    title: 'Describing soil horizons in the pit',
+    type: 'video',
+    tag: 'Fieldwork',
+    duration: '0:09',
+    url: `${CLD}/video/upload/${VIDEO_T}/v1794232541/PXL_20261102_083853245_qk2mhh.mp4`,
+    thumbnail: `${CLD}/video/upload/${POSTER_T}/v1794232541/PXL_20261102_083853245_qk2mhh.jpg`,
+    description: 'Students inside the pit examine the reddish-brown horizons, Adıyaman, Day 1.',
+  },
 ]
 
 async function seed() {
@@ -77,14 +107,21 @@ async function seed() {
     { upsert: true, returnDocument: 'after' }
   )
 
+  // Drop anything this script created earlier that is no longer in SAMPLES
+  // (e.g. the old example.com placeholders). Other resources are untouched.
+  const removed = await Resource.deleteMany({
+    createdBy: owner._id,
+    title: { $nin: SAMPLES.map(s => s.title) },
+  })
+
   for (const sample of SAMPLES) {
     await Resource.updateOne(
       { title: sample.title },
-      { $setOnInsert: { ...sample, createdBy: owner._id } },
+      { $set: { ...sample, createdBy: owner._id } },
       { upsert: true }
     )
   }
-  console.log(`Seeded ${SAMPLES.length} resources.`)
+  console.log(`Seeded ${SAMPLES.length} resources, removed ${removed.deletedCount} old ones.`)
   await mongoose.disconnect()
 }
 
